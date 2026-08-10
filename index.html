@@ -72,6 +72,7 @@
   <div class="goal-wrap">
     <div class="goal-top">
       <span class="label">Today's focus</span>
+      <span class="streak mono hidden" id="streakBadge"></span>
       <span class="val mono"><span id="todayMinutes">0</span> / <span id="goalMinutes">120</span> min</span>
     </div>
     <div class="bar-track"><div class="bar-fill" id="goalBar" style="width:0%"></div></div>
@@ -106,6 +107,7 @@
       <div class="break-actions">
         <button class="btn btn-ghost btn-small" id="prayerBtn">Prayer break</button>
         <button class="btn btn-ghost btn-small" id="personalBtn">Personal time</button>
+        <button class="btn btn-ghost btn-small" id="notifyBtn">🔔 Enable notifications</button>
       </div>
       <div class="queue-hint" id="queueHint">Toggle subjects on the right to add them to today's queue.</div>
       <div class="settings-row">
@@ -141,6 +143,19 @@
       </div>
       <div class="subjects-list" id="subjectsList">
         <div class="empty-state">No subjects yet — add your first one above.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-secondary">
+    <div class="panel">
+      <h2>This week</h2>
+      <div class="week-chart" id="weekChart"></div>
+    </div>
+    <div class="panel">
+      <h2>Recent sessions</h2>
+      <div class="session-list" id="sessionList">
+        <div class="empty-state">No sessions logged yet.</div>
       </div>
     </div>
   </div>

@@ -13,7 +13,9 @@ let state = {
   personalMinutes: 10,
   todayMinutes: 0,
   todayDate: "",
-  subjects: [] // {id, name, active, minutesStudied, lessons:[{id,title,done}]}
+  subjects: [], // {id, name, active, minutesStudied, lessons:[{id,title,done}]}
+  dailyLog: {}, // "YYYY-MM-DD" -> minutes studied that day (drives streak + weekly chart)
+  sessions: [] // {id, subject, minutes, at} — most recent first, capped at 50
 };
 
 let saveTimer = null;
@@ -27,6 +29,9 @@ function queueSave(){
 
 function todayStr(){
   return new Date().toISOString().slice(0,10);
+}
+function dateStr(d){
+  return d.toISOString().slice(0,10);
 }
 
 /* =========================================================
@@ -448,8 +453,10 @@ let specialReturnState = null;
 function completePhase(){
   beep();
   if (timer.phase === "prayer" || timer.phase === "personal") {
+    const finishedPhase = timer.phase;
     const returnTo = specialReturnState;
     specialReturnState = null;
+    maybeNotify("Break's over", finishedPhase === "prayer" ? "Prayer break finished — back to it." : "Personal time finished — back to it.");
     if (returnTo) {
       timer.phase = returnTo.phase;
       timer.secondsLeft = returnTo.secondsLeft;
@@ -468,14 +475,20 @@ function completePhase(){
     const subj = currentSubject();
     if (subj) subj.minutesStudied += state.studyMinutes;
     state.todayMinutes += state.studyMinutes;
+    logStudySession(subj, state.studyMinutes);
     renderGoal();
     renderSubjects();
+    renderStreak();
+    renderWeekChart();
+    renderSessions();
     queueSave();
     timer.phase = "break";
+    maybeNotify("Study block done", subj ? `${subj.name} — time for a break.` : "Time for a break.");
   } else {
     const q = getQueue();
     if (q.length > 0) timer.queueIndex = (timer.queueIndex + 1) % q.length;
     timer.phase = "study";
+    maybeNotify("Break's over", "Back to studying.");
   }
   resetPhase();
 }
@@ -522,6 +535,122 @@ document.getElementById("personalBtn").addEventListener("click", () => {
 });
 
 /* =========================================================
+   7B) STREAK + WEEKLY CHART + SESSION HISTORY
+========================================================= */
+function logStudySession(subj, minutes){
+  const today = todayStr();
+  state.dailyLog[today] = (state.dailyLog[today] || 0) + minutes;
+
+  state.sessions.unshift({
+    id: uid_(),
+    subject: subj ? subj.name : "No subject",
+    minutes,
+    at: new Date().toISOString()
+  });
+  if (state.sessions.length > 50) state.sessions.length = 50;
+}
+
+function computeStreak(){
+  const goal = state.dailyGoalMinutes;
+  if (!goal) return 0;
+  let d = new Date();
+  // Today doesn't count against the streak until it's actually hit — start
+  // checking from yesterday if today isn't there yet, so a streak in
+  // progress doesn't drop to 0 partway through the day.
+  if ((state.dailyLog[dateStr(d)] || 0) < goal) {
+    d.setUTCDate(d.getUTCDate() - 1);
+  }
+  let streak = 0;
+  while ((state.dailyLog[dateStr(d)] || 0) >= goal) {
+    streak++;
+    d.setUTCDate(d.getUTCDate() - 1);
+  }
+  return streak;
+}
+
+function renderStreak(){
+  const el = document.getElementById("streakBadge");
+  if (!el) return;
+  const streak = computeStreak();
+  if (streak > 0) {
+    el.textContent = `🔥 ${streak} day${streak === 1 ? "" : "s"}`;
+    el.classList.remove("hidden");
+  } else {
+    el.textContent = "";
+    el.classList.add("hidden");
+  }
+}
+
+function renderWeekChart(){
+  const wrap = document.getElementById("weekChart");
+  if (!wrap) return;
+  const days = [];
+  const d = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const dd = new Date(d);
+    dd.setUTCDate(d.getUTCDate() - i);
+    days.push({ ds: dateStr(dd), label: dd.toLocaleDateString(undefined, { weekday: "short", timeZone: "UTC" })[0], minutes: state.dailyLog[dateStr(dd)] || 0 });
+  }
+  const max = Math.max(state.dailyGoalMinutes, ...days.map(x => x.minutes), 1);
+  wrap.innerHTML = days.map(x => `
+    <div class="week-bar" title="${x.minutes} min">
+      <div class="week-bar-track"><div class="week-bar-fill" style="height:${Math.min(100, Math.round((x.minutes/max)*100))}%"></div></div>
+      <div class="week-bar-label">${x.label}</div>
+    </div>
+  `).join("");
+}
+
+function renderSessions(){
+  const wrap = document.getElementById("sessionList");
+  if (!wrap) return;
+  if (state.sessions.length === 0) {
+    wrap.innerHTML = '<div class="empty-state">No sessions logged yet.</div>';
+    return;
+  }
+  wrap.innerHTML = state.sessions.slice(0, 10).map(s => {
+    const t = new Date(s.at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+    return `
+      <div class="session-item">
+        <span class="session-subject">${escapeHtml(s.subject)}</span>
+        <span class="session-minutes mono">${s.minutes} min</span>
+        <span class="session-time mono">${t}</span>
+      </div>
+    `;
+  }).join("");
+}
+
+/* =========================================================
+   7C) NOTIFICATIONS
+========================================================= */
+function updateNotifyBtn(){
+  const btn = document.getElementById("notifyBtn");
+  if (!btn) return;
+  if (!("Notification" in window)) {
+    btn.textContent = "Notifications unsupported";
+    btn.disabled = true;
+    return;
+  }
+  if (Notification.permission === "granted") btn.textContent = "🔔 Notifications on";
+  else if (Notification.permission === "denied") btn.textContent = "🔕 Notifications blocked";
+  else btn.textContent = "🔔 Enable notifications";
+}
+
+document.getElementById("notifyBtn").addEventListener("click", async () => {
+  if (!("Notification" in window)) return;
+  if (Notification.permission === "default") {
+    await Notification.requestPermission();
+  }
+  updateNotifyBtn();
+});
+
+function maybeNotify(title, body){
+  if (!("Notification" in window)) return;
+  if (Notification.permission !== "granted") return;
+  if (!document.hidden) return; // only nudge them if they've actually tabbed away
+  try { new Notification(title, { body }); } catch(e) {}
+}
+
+/* =========================================================
    7) GOAL BAR
 ========================================================= */
 function renderGoal(){
@@ -546,4 +675,8 @@ function renderAll(){
   renderSubjects();
   renderGoal();
   renderQueueHint();
+  renderStreak();
+  renderWeekChart();
+  renderSessions();
+  updateNotifyBtn();
 }

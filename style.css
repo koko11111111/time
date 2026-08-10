@@ -150,9 +150,10 @@
     background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
     padding:16px 20px; margin-bottom:22px;
   }
-  .goal-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;}
+  .goal-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; gap:10px;}
   .goal-top .label{font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.08em;}
-  .goal-top .val{font-size:14px; color:var(--text);}
+  .goal-top .val{font-size:14px; color:var(--text); margin-left:auto;}
+  .goal-top .streak{font-size:13px; color:#facc15;}
   .bar-track{height:10px; border-radius:999px; background:var(--panel-2); overflow:hidden; position:relative; border:1px solid var(--line);}
   .bar-fill{
     height:100%; border-radius:999px;
@@ -162,6 +163,30 @@
 
   .grid{display:grid; grid-template-columns:1fr 1.1fr; gap:22px;}
   @media (max-width:880px){ .grid{grid-template-columns:1fr;} }
+
+  .grid-secondary{grid-template-columns:1fr 1.3fr; margin-top:22px;}
+  @media (max-width:880px){ .grid-secondary{grid-template-columns:1fr;} }
+
+  /* weekly chart */
+  .week-chart{display:flex; align-items:flex-end; justify-content:space-between; gap:10px; height:140px; padding-top:10px;}
+  .week-bar{display:flex; flex-direction:column; align-items:center; gap:8px; flex:1; height:100%;}
+  .week-bar-track{
+    width:100%; max-width:26px; flex:1; display:flex; align-items:flex-end;
+    background:var(--panel-2); border:1px solid var(--line); border-radius:6px; overflow:hidden;
+  }
+  .week-bar-fill{width:100%; min-height:2px; background:linear-gradient(180deg, var(--green-bright), var(--green-deep)); border-radius:6px 6px 0 0;}
+  .week-bar-label{font-size:11px; color:var(--text-muted); text-transform:uppercase;}
+
+  /* session history */
+  .session-list{display:flex; flex-direction:column; gap:2px; max-height:280px; overflow-y:auto;}
+  .session-item{
+    display:flex; align-items:center; gap:10px; padding:9px 4px;
+    border-bottom:1px solid var(--line); font-size:13px;
+  }
+  .session-item:last-child{border-bottom:none;}
+  .session-subject{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .session-minutes{color:var(--green-bright); font-size:12.5px;}
+  .session-time{color:var(--text-muted); font-size:12px; width:64px; text-align:right;}
 
   .panel{
     background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
