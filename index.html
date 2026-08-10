@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyFlow — Grow your study habit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ============ LANDING ============ -->
+<section id="landing">
+  <svg class="leaf-field" viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="leafGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#22c55e"/>
+        <stop offset="100%" stop-color="#0c1913"/>
+      </linearGradient>
+    </defs>
+    <circle cx="90" cy="80" r="140" fill="url(#leafGrad)" opacity="0.15"/>
+    <circle cx="720" cy="420" r="180" fill="url(#leafGrad)" opacity="0.12"/>
+    <circle cx="680" cy="60" r="90" fill="url(#leafGrad)" opacity="0.10"/>
+  </svg>
+  <div class="landing-inner">
+    <div class="brand"><span class="dot"></span> StudyFlow</div>
+    <h1>Turn study time into <span class="accent">steady growth.</span></h1>
+    <p class="tagline">Set your subjects, split time between focus and rest, check off lessons as you go — and watch each subject's progress bar fill in.</p>
+    <button class="google-btn" id="googleSignIn">
+      <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.9 32.9 29.4 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.9 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.3 0 10.2-2 13.9-5.4l-6.4-5.4C29.4 34.9 26.8 36 24 36c-5.3 0-9.8-3.1-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1 3-3.2 5.5-6.1 7.1l6.4 5.4C39.6 37.1 44 31.4 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+      Continue with Google
+    </button>
+
+    <div class="divider"><span>or</span></div>
+
+    <form id="emailForm" class="email-form" novalidate>
+      <div class="field-wrap hidden" id="nameFieldWrap">
+        <input type="text" id="nameInput" placeholder="Full name" autocomplete="name">
+      </div>
+      <div class="field-wrap">
+        <input type="email" id="emailInput" placeholder="Email" autocomplete="email" required>
+      </div>
+      <div class="field-wrap">
+        <input type="password" id="passwordInput" placeholder="Password" autocomplete="current-password" required minlength="6">
+      </div>
+      <button type="submit" class="btn btn-primary email-submit" id="emailSubmitBtn">Log in</button>
+    </form>
+
+    <div class="auth-switch">
+      <span id="authSwitchText">Don't have an account?</span>
+      <button type="button" id="authSwitchBtn">Sign up</button>
+    </div>
+    <button type="button" id="forgotBtn" class="forgot-link">Forgot password?</button>
+
+    <div id="authError"></div>
+    <div class="fine">Uses your existing Firebase authentication.</div>
+  </div>
+</section>
+
+<!-- ============ APP ============ -->
+<div id="app" class="hidden">
+  <header class="topbar">
+    <div class="brand"><span class="dot"></span> StudyFlow</div>
+    <div class="who">
+      <span class="greet">Hi, <b id="userName">—</b></span>
+      <img class="avatar" id="userAvatar" src="" alt="">
+      <button class="btn btn-ghost btn-small" id="signOutBtn">Sign out</button>
+    </div>
+  </header>
+
+  <div class="goal-wrap">
+    <div class="goal-top">
+      <span class="label">Today's focus</span>
+      <span class="val mono"><span id="todayMinutes">0</span> / <span id="goalMinutes">120</span> min</span>
+    </div>
+    <div class="bar-track"><div class="bar-fill" id="goalBar" style="width:0%"></div></div>
+  </div>
+
+  <div class="grid">
+    <!-- TIMER -->
+    <div class="panel timer-panel">
+      <h2 style="align-self:flex-start;">Focus timer</h2>
+      <div class="ring-wrap">
+        <svg viewBox="0 0 220 220">
+          <defs>
+            <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#4ade80"/>
+              <stop offset="100%" stop-color="#14532d"/>
+            </linearGradient>
+          </defs>
+          <circle class="ring-bg" cx="110" cy="110" r="96"></circle>
+          <circle class="ring-fg" id="ringFg" cx="110" cy="110" r="96"></circle>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-time mono" id="ringTime">25:00</div>
+          <div class="ring-phase" id="ringPhase">Study</div>
+          <div class="ring-subject" id="ringSubject">No subject queued</div>
+        </div>
+      </div>
+      <div class="timer-controls">
+        <button class="btn btn-primary" id="startPauseBtn">Start</button>
+        <button class="btn" id="skipBtn">Skip</button>
+        <button class="btn btn-ghost" id="resetBtn">Reset</button>
+      </div>
+      <div class="break-actions">
+        <button class="btn btn-ghost btn-small" id="prayerBtn">Prayer break</button>
+        <button class="btn btn-ghost btn-small" id="personalBtn">Personal time</button>
+      </div>
+      <div class="queue-hint" id="queueHint">Toggle subjects on the right to add them to today's queue.</div>
+      <div class="settings-row">
+        <div class="field">
+          <label>Study (min)</label>
+          <input type="number" min="1" max="180" id="studyMinInput" class="mono">
+        </div>
+        <div class="field">
+          <label>Break (min)</label>
+          <input type="number" min="1" max="60" id="breakMinInput" class="mono">
+        </div>
+        <div class="field">
+          <label>Prayer (min)</label>
+          <input type="number" min="1" max="60" id="prayerMinInput" class="mono">
+        </div>
+        <div class="field">
+          <label>Personal (min)</label>
+          <input type="number" min="1" max="60" id="personalMinInput" class="mono">
+        </div>
+        <div class="field">
+          <label>Daily goal (min)</label>
+          <input type="number" min="5" max="720" id="goalInput" class="mono">
+        </div>
+      </div>
+    </div>
+
+    <!-- SUBJECTS -->
+    <div class="panel">
+      <h2>Subjects &amp; lessons</h2>
+      <div class="add-row">
+        <input type="text" id="newSubjectInput" placeholder="Add a subject, e.g. Organic Chemistry">
+        <button class="btn btn-primary btn-small" id="addSubjectBtn">Add</button>
+      </div>
+      <div class="subjects-list" id="subjectsList">
+        <div class="empty-state">No subjects yet — add your first one above.</div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="appfoot">Built with StudyFlow · your data is saved to your account</footer>
+</div>
+
+<!-- ============ FIREBASE ============ -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<!-- ============ APP SCRIPTS ============ -->
+<script src="js/firebase-config.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
