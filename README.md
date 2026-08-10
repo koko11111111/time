@@ -17,18 +17,7 @@ studyflow/
 
 ## Setup
 
-1. **Add your Firebase config.** Open `js/firebase-config.js` and replace the placeholder values with the config from your Firebase project (Project settings → General → Your apps → SDK setup and configuration):
-
-   ```js
-   const firebaseConfig = {
-     apiKey: "...",
-     authDomain: "...",
-     projectId: "...",
-     storageBucket: "...",
-     messagingSenderId: "...",
-     appId: "..."
-   };
-   ```
+1. **Firebase config is already set** in `js/firebase-config.js`, wired to your `sanatio-c4122` project. (Firebase web API keys are meant to be public — your project stays secure via the Authentication settings and Firestore rules below, not by hiding this key.)
 
 2. **Enable sign-in methods** in Firebase → Authentication → Sign-in method: turn on both **Google** and **Email/Password** (if not already on).
 
