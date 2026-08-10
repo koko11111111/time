@@ -7,17 +7,18 @@ A black-and-green study time manager: pomodoro-style focus/break timer, subjects
 ```
 studyflow/
 ├── index.html          # markup
-├── css/
-│   └── style.css       # all styling (dark + green gradient theme)
-├── js/
-│   ├── firebase-config.js   # your Firebase project config + init (EDIT THIS)
-│   └── app.js                # auth, timer, subjects/lessons, Firestore sync
+├── style.css            # all styling (dark + green gradient theme)
+├── firebase-config.js   # your Firebase project config + init (EDIT THIS)
+├── app.js                # auth, timer, subjects/lessons, Firestore sync
+├── firestore.rules
 └── README.md
 ```
 
+All files sit flat at the repo root — `index.html` links to `style.css`, `firebase-config.js`, and `app.js` directly (no subfolders), so when uploading to GitHub, keep them all at the top level of the repo.
+
 ## Setup
 
-1. **Firebase config is already set** in `js/firebase-config.js`, wired to your `sanatio-c4122` project. (Firebase web API keys are meant to be public — your project stays secure via the Authentication settings and Firestore rules below, not by hiding this key.)
+1. **Firebase config is already set** in `firebase-config.js`, wired to your `sanatio-c4122` project. (Firebase web API keys are meant to be public — your project stays secure via the Authentication settings and Firestore rules below, not by hiding this key.)
 
 2. **Enable sign-in methods** in Firebase → Authentication → Sign-in method: turn on both **Google** and **Email/Password** (if not already on).
 
