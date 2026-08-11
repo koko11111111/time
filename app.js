@@ -1,4 +1,28 @@
 /* =========================================================
+   1) ICONS (inline SVG, replaces emoji glyphs)
+========================================================= */
+const ICON_PATHS = {
+  sun: '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>',
+  moon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>',
+  eye: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>',
+  eyeOff: '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>',
+  grip: '<circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="19" r="1"></circle>',
+  undo: '<polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>',
+  trash: '<polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line>',
+  x: '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>',
+  archive: '<polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line>',
+  volume: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>',
+  volumeOff: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line>',
+  bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path>',
+  bellOff: '<path d="M13.73 21a2 2 0 0 1-3.46 0"></path><path d="M18.63 13A17.89 17.89 0 0 1 18 8"></path><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"></path><path d="M18 8a6 6 0 0 0-9.33-5"></path><line x1="1" y1="1" x2="23" y2="23"></line>',
+  flame: '<path d="M8.5 14.5a2.5 2.5 0 0 0 2.5-2.5c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>'
+};
+function svgIcon(name, extraClass){
+  const cls = "icon" + (extraClass ? " " + extraClass : "");
+  return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON_PATHS[name] || ""}</svg>`;
+}
+
+/* =========================================================
    2) STATE
 ========================================================= */
 let uid = null;
@@ -41,10 +65,10 @@ function dateStr(d){
 ========================================================= */
 function applyTheme(theme){
   document.documentElement.setAttribute("data-theme", theme);
-  const icon = theme === "light" ? "🌙" : "☀️";
+  const icon = svgIcon(theme === "light" ? "moon" : "sun");
   ["themeToggleLanding", "themeToggleApp"].forEach(id => {
     const btn = document.getElementById(id);
-    if (btn) btn.textContent = icon;
+    if (btn) btn.innerHTML = icon;
   });
 }
 function toggleTheme(){
@@ -107,7 +131,7 @@ const pwToggleBtn = document.getElementById("pwToggleBtn");
 pwToggleBtn.addEventListener("click", () => {
   const showing = passwordInput.type === "text";
   passwordInput.type = showing ? "password" : "text";
-  pwToggleBtn.textContent = showing ? "👁" : "🙈";
+  pwToggleBtn.innerHTML = showing ? svgIcon("eye") : svgIcon("eyeOff");
   pwToggleBtn.title = showing ? "Show password" : "Hide password";
   pwToggleBtn.classList.toggle("showing", !showing);
 });
@@ -195,7 +219,7 @@ auth.onAuthStateChanged(async (user) => {
     document.getElementById("app").classList.remove("hidden");
     emailForm.reset();
     passwordInput.type = "password";
-    pwToggleBtn.textContent = "👁";
+    pwToggleBtn.innerHTML = svgIcon("eye");
     pwToggleBtn.classList.remove("showing");
     const firstName = user.displayName
       ? user.displayName.split(" ")[0]
@@ -299,7 +323,7 @@ function subjectCardHtml(subj, archived){
   return `
     <div class="subject-card" data-cardid="${subj.id}" style="border-left:3px solid ${color};" ${archived ? "" : 'draggable="true"'}>
       <div class="subject-head">
-        ${archived ? "" : '<span class="drag-handle" title="Drag to reorder">⋮⋮</span>'}
+        ${archived ? "" : `<span class="drag-handle" title="Drag to reorder">${svgIcon("grip")}</span>`}
         <div class="color-dot" data-colorid="${subj.id}" style="background:${color};" title="Change color"></div>
         <div class="name-wrap">
           <div>
@@ -308,10 +332,10 @@ function subjectCardHtml(subj, archived){
           </div>
         </div>
         ${archived
-          ? `<button class="icon-btn" data-restore="${subj.id}" title="Restore subject">↩</button>
-             <button class="icon-btn" data-del="${subj.id}" title="Delete permanently">✕</button>`
+          ? `<button class="icon-btn" data-restore="${subj.id}" title="Restore subject">${svgIcon("undo")}</button>
+             <button class="icon-btn" data-del="${subj.id}" title="Delete permanently">${svgIcon("trash")}</button>`
           : `<div class="toggle ${subj.active ? "on" : ""}" data-id="${subj.id}" title="Include in today's queue"><div class="knob"></div></div>
-             <button class="icon-btn" data-archive="${subj.id}" title="Archive subject">📦</button>`
+             <button class="icon-btn" data-archive="${subj.id}" title="Archive subject">${svgIcon("archive")}</button>`
         }
       </div>
       <div class="subj-bar-row">
@@ -323,7 +347,7 @@ function subjectCardHtml(subj, archived){
           <label class="lesson ${l.done ? "done" : ""}">
             <input type="checkbox" data-subj="${subj.id}" data-lesson="${l.id}" ${l.done ? "checked" : ""} ${archived ? "disabled" : ""}>
             <span class="title">${escapeHtml(l.title)}</span>
-            ${archived ? "" : `<button class="icon-btn" data-dellesson="${l.id}" data-dellessonsubj="${subj.id}" title="Remove lesson">✕</button>`}
+            ${archived ? "" : `<button class="icon-btn" data-dellesson="${l.id}" data-dellessonsubj="${subj.id}" title="Remove lesson">${svgIcon("x", "icon-sm")}</button>`}
           </label>
         `).join("")}
       </div>
@@ -554,7 +578,9 @@ function renderRing(){
 function updateSoundBtn(){
   const btn = document.getElementById("soundToggleBtn");
   if (!btn) return;
-  btn.textContent = state.soundEnabled ? "🔊 Sound on" : "🔇 Sound off";
+  btn.innerHTML = state.soundEnabled
+    ? `${svgIcon("volume")}<span>Sound on</span>`
+    : `${svgIcon("volumeOff")}<span>Sound off</span>`;
 }
 document.getElementById("soundToggleBtn").addEventListener("click", () => {
   state.soundEnabled = !state.soundEnabled;
@@ -715,7 +741,7 @@ function renderStreak(){
   if (!el) return;
   const streak = computeStreak();
   if (streak > 0) {
-    el.textContent = `🔥 ${streak} day${streak === 1 ? "" : "s"}`;
+    el.innerHTML = `${svgIcon("flame", "icon-sm")}<span>${streak} day${streak === 1 ? "" : "s"}</span>`;
     el.classList.remove("hidden");
   } else {
     el.textContent = "";
@@ -844,9 +870,9 @@ function updateNotifyBtn(){
     btn.disabled = true;
     return;
   }
-  if (Notification.permission === "granted") btn.textContent = "🔔 Notifications on";
-  else if (Notification.permission === "denied") btn.textContent = "🔕 Notifications blocked";
-  else btn.textContent = "🔔 Enable notifications";
+  if (Notification.permission === "granted") btn.innerHTML = `${svgIcon("bell")}<span>Notifications on</span>`;
+  else if (Notification.permission === "denied") btn.innerHTML = `${svgIcon("bellOff")}<span>Notifications blocked</span>`;
+  else btn.innerHTML = `${svgIcon("bell")}<span>Enable notifications</span>`;
 }
 
 document.getElementById("notifyBtn").addEventListener("click", async () => {
