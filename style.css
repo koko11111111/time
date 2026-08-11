@@ -111,6 +111,8 @@
     font-size:22px; font-weight:700; letter-spacing:-.02em;
     color:var(--text); margin-bottom:28px;
   }
+  .brand-mark{ height:24px; width:auto; display:block; }
+  .brand-mark-lg{ height:32px; }
   .brand .dot{
     width:10px; height:10px; border-radius:50%;
     background:linear-gradient(135deg, var(--green-bright), var(--green-deep));
@@ -188,6 +190,7 @@
     display:flex; align-items:center; justify-content:space-between;
     padding:8px 4px 22px;
   }
+  header.topbar .brand{margin-bottom:0;}
   header.topbar .who{display:flex; align-items:center; gap:10px;}
   header.topbar img.avatar{width:34px; height:34px; border-radius:50%; border:2px solid var(--green-mid);}
   header.topbar .greet{font-size:14px; color:var(--text-muted);}

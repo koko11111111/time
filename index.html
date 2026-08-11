@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>StudyFlow — Grow your study habit</title>
+<link rel="icon" type="image/png" href="studyflow-mark.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
@@ -25,7 +26,7 @@
   </svg>
   <button type="button" class="theme-toggle" id="themeToggleLanding" title="Toggle light / dark"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></button>
   <div class="landing-inner">
-    <div class="brand"><span class="dot"></span> StudyFlow</div>
+    <div class="brand"><img class="brand-mark brand-mark-lg" src="studyflow-mark.png" alt="" width="119" height="75"> StudyFlow</div>
     <h1>Turn study time into <span class="accent">steady growth.</span></h1>
     <p class="tagline">Set your subjects, split time between focus and rest, check off lessons as you go — and watch each subject's progress bar fill in.</p>
     <button class="google-btn" id="googleSignIn">
@@ -63,7 +64,7 @@
 <!-- ============ APP ============ -->
 <div id="app" class="hidden">
   <header class="topbar">
-    <div class="brand"><span class="dot"></span> StudyFlow</div>
+    <div class="brand"><img class="brand-mark" src="studyflow-mark.png" alt="" width="119" height="75"> StudyFlow</div>
     <div class="who">
       <span class="greet">Hi, <b id="userName">—</b></span>
       <img class="avatar" id="userAvatar" src="" alt="">
