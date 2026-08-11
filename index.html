@@ -23,6 +23,7 @@
     <circle cx="720" cy="420" r="180" fill="url(#leafGrad)" opacity="0.12"/>
     <circle cx="680" cy="60" r="90" fill="url(#leafGrad)" opacity="0.10"/>
   </svg>
+  <button type="button" class="theme-toggle" id="themeToggleLanding" title="Toggle light / dark">☀️</button>
   <div class="landing-inner">
     <div class="brand"><span class="dot"></span> StudyFlow</div>
     <h1>Turn study time into <span class="accent">steady growth.</span></h1>
@@ -41,8 +42,9 @@
       <div class="field-wrap">
         <input type="email" id="emailInput" placeholder="Email" autocomplete="email" required>
       </div>
-      <div class="field-wrap">
+      <div class="field-wrap password-wrap">
         <input type="password" id="passwordInput" placeholder="Password" autocomplete="current-password" required minlength="6">
+        <button type="button" class="pw-toggle" id="pwToggleBtn" title="Show password" aria-label="Show password">👁</button>
       </div>
       <button type="submit" class="btn btn-primary email-submit" id="emailSubmitBtn">Log in</button>
     </form>
@@ -65,6 +67,7 @@
     <div class="who">
       <span class="greet">Hi, <b id="userName">—</b></span>
       <img class="avatar" id="userAvatar" src="" alt="">
+      <button type="button" class="theme-toggle" id="themeToggleApp" title="Toggle light / dark">☀️</button>
       <button class="btn btn-ghost btn-small" id="signOutBtn">Sign out</button>
     </div>
   </header>
@@ -76,6 +79,10 @@
       <span class="val mono"><span id="todayMinutes">0</span> / <span id="goalMinutes">120</span> min</span>
     </div>
     <div class="bar-track"><div class="bar-fill" id="goalBar" style="width:0%"></div></div>
+    <div class="alltime-row mono">
+      <span><b id="statTotalHours">0h</b> total studied</span>
+      <span><b id="statBestStreak">0</b> day best streak</span>
+    </div>
   </div>
 
   <div class="grid">
@@ -108,6 +115,7 @@
         <button class="btn btn-ghost btn-small" id="prayerBtn">Prayer break</button>
         <button class="btn btn-ghost btn-small" id="personalBtn">Personal time</button>
         <button class="btn btn-ghost btn-small" id="notifyBtn">🔔 Enable notifications</button>
+        <button class="btn btn-ghost btn-small" id="soundToggleBtn">🔊 Sound on</button>
       </div>
       <div class="queue-hint" id="queueHint">Toggle subjects on the right to add them to today's queue.</div>
       <div class="settings-row">
@@ -144,16 +152,25 @@
       <div class="subjects-list" id="subjectsList">
         <div class="empty-state">No subjects yet — add your first one above.</div>
       </div>
+      <button type="button" class="archived-toggle hidden" id="archivedToggleBtn">Archived (<span id="archivedCount">0</span>)</button>
+      <div class="subjects-list hidden" id="archivedList"></div>
     </div>
   </div>
 
   <div class="grid grid-secondary">
     <div class="panel">
-      <h2>This week</h2>
+      <div class="panel-head-row">
+        <h2 id="chartTitle">This week</h2>
+        <button type="button" class="btn btn-ghost btn-small" id="chartRangeBtn">View month</button>
+      </div>
       <div class="week-chart" id="weekChart"></div>
+      <div class="heatmap hidden" id="monthHeatmap"></div>
     </div>
     <div class="panel">
-      <h2>Recent sessions</h2>
+      <div class="panel-head-row">
+        <h2>Recent sessions</h2>
+        <button type="button" class="btn btn-ghost btn-small" id="exportCsvBtn">Export CSV</button>
+      </div>
       <div class="session-list" id="sessionList">
         <div class="empty-state">No sessions logged yet.</div>
       </div>

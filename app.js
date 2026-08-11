@@ -6,6 +6,8 @@ let state = {
   displayName: "",
   email: "",
   photoURL: "",
+  theme: "dark",
+  soundEnabled: true,
   dailyGoalMinutes: 120,
   studyMinutes: 25,
   breakMinutes: 5,
@@ -13,7 +15,7 @@ let state = {
   personalMinutes: 10,
   todayMinutes: 0,
   todayDate: "",
-  subjects: [], // {id, name, active, minutesStudied, lessons:[{id,title,done}]}
+  subjects: [], // {id, name, active, minutesStudied, lessons:[{id,title,done}], color, archived, order}
   dailyLog: {}, // "YYYY-MM-DD" -> minutes studied that day (drives streak + weekly chart)
   sessions: [] // {id, subject, minutes, at} — most recent first, capped at 50
 };
@@ -33,6 +35,34 @@ function todayStr(){
 function dateStr(d){
   return d.toISOString().slice(0,10);
 }
+
+/* =========================================================
+   2B) THEME
+========================================================= */
+function applyTheme(theme){
+  document.documentElement.setAttribute("data-theme", theme);
+  const icon = theme === "light" ? "🌙" : "☀️";
+  ["themeToggleLanding", "themeToggleApp"].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.textContent = icon;
+  });
+}
+function toggleTheme(){
+  const next = (state.theme === "light") ? "dark" : "light";
+  state.theme = next;
+  localStorage.setItem("studyflow-theme", next);
+  applyTheme(next);
+  if (uid) queueSave();
+}
+// Apply saved/system theme immediately, before sign-in state is known.
+(function initTheme(){
+  const saved = localStorage.getItem("studyflow-theme");
+  const theme = saved || (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+  state.theme = theme;
+  applyTheme(theme);
+})();
+document.getElementById("themeToggleLanding").addEventListener("click", toggleTheme);
+document.getElementById("themeToggleApp").addEventListener("click", toggleTheme);
 
 /* =========================================================
    3) AUTH
@@ -72,6 +102,15 @@ function friendlyAuthError(err){
     default: return "Something went wrong. Please try again.";
   }
 }
+
+const pwToggleBtn = document.getElementById("pwToggleBtn");
+pwToggleBtn.addEventListener("click", () => {
+  const showing = passwordInput.type === "text";
+  passwordInput.type = showing ? "password" : "text";
+  pwToggleBtn.textContent = showing ? "👁" : "🙈";
+  pwToggleBtn.title = showing ? "Show password" : "Hide password";
+  pwToggleBtn.classList.toggle("showing", !showing);
+});
 
 function setAuthMode(mode){
   authMode = mode;
@@ -155,6 +194,9 @@ auth.onAuthStateChanged(async (user) => {
     document.getElementById("landing").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
     emailForm.reset();
+    passwordInput.type = "password";
+    pwToggleBtn.textContent = "👁";
+    pwToggleBtn.classList.remove("showing");
     const firstName = user.displayName
       ? user.displayName.split(" ")[0]
       : (user.email ? user.email.split("@")[0] : "there");
@@ -166,6 +208,8 @@ auth.onAuthStateChanged(async (user) => {
     const snap = await ref.get();
     if (snap.exists) {
       state = Object.assign({}, state, snap.data());
+      applyTheme(state.theme || "dark");
+      localStorage.setItem("studyflow-theme", state.theme || "dark");
     } else {
       state.displayName = user.displayName || "";
       state.email = user.email || "";
@@ -230,41 +274,45 @@ document.getElementById("addSubjectBtn").addEventListener("click", addSubject);
 document.getElementById("newSubjectInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") addSubject();
 });
+const SUBJECT_COLORS = ["#4ade80", "#facc15", "#f87171", "#7dd3fc", "#c084fc", "#fb923c"];
+function nextColor(){
+  const used = state.subjects.map(s => s.color);
+  return SUBJECT_COLORS.find(c => !used.includes(c)) || SUBJECT_COLORS[state.subjects.length % SUBJECT_COLORS.length];
+}
+
 function addSubject(){
   const input = document.getElementById("newSubjectInput");
   const name = input.value.trim();
   if (!name) return;
-  state.subjects.push({ id: uid_(), name, active: true, minutesStudied: 0, lessons: [] });
+  state.subjects.push({ id: uid_(), name, active: true, archived: false, minutesStudied: 0, lessons: [], color: nextColor() });
   input.value = "";
   queueSave();
   renderSubjects();
   renderQueueHint();
 }
 
-function renderSubjects(){
-  const list = document.getElementById("subjectsList");
-  list.innerHTML = "";
-  if (state.subjects.length === 0) {
-    list.innerHTML = '<div class="empty-state">No subjects yet — add your first one above.</div>';
-    return;
-  }
-  state.subjects.forEach((subj) => {
-    const total = subj.lessons.length;
-    const done = subj.lessons.filter(l => l.done).length;
-    const pct = total ? Math.round((done/total)*100) : 0;
-
-    const card = document.createElement("div");
-    card.className = "subject-card";
-    card.innerHTML = `
+function subjectCardHtml(subj, archived){
+  const total = subj.lessons.length;
+  const done = subj.lessons.filter(l => l.done).length;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  const color = subj.color || SUBJECT_COLORS[0];
+  return `
+    <div class="subject-card" data-cardid="${subj.id}" style="border-left:3px solid ${color};" ${archived ? "" : 'draggable="true"'}>
       <div class="subject-head">
+        ${archived ? "" : '<span class="drag-handle" title="Drag to reorder">⋮⋮</span>'}
+        <div class="color-dot" data-colorid="${subj.id}" style="background:${color};" title="Change color"></div>
         <div class="name-wrap">
           <div>
             <div class="name">${escapeHtml(subj.name)}</div>
             <div class="meta">${subj.minutesStudied} min studied · ${done}/${total} lessons</div>
           </div>
         </div>
-        <div class="toggle ${subj.active ? "on" : ""}" data-id="${subj.id}" title="Include in today's queue"><div class="knob"></div></div>
-        <button class="icon-btn" data-del="${subj.id}" title="Delete subject">✕</button>
+        ${archived
+          ? `<button class="icon-btn" data-restore="${subj.id}" title="Restore subject">↩</button>
+             <button class="icon-btn" data-del="${subj.id}" title="Delete permanently">✕</button>`
+          : `<div class="toggle ${subj.active ? "on" : ""}" data-id="${subj.id}" title="Include in today's queue"><div class="knob"></div></div>
+             <button class="icon-btn" data-archive="${subj.id}" title="Archive subject">📦</button>`
+        }
       </div>
       <div class="subj-bar-row">
         <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
@@ -273,21 +321,82 @@ function renderSubjects(){
       <div class="lessons">
         ${subj.lessons.map(l => `
           <label class="lesson ${l.done ? "done" : ""}">
-            <input type="checkbox" data-subj="${subj.id}" data-lesson="${l.id}" ${l.done ? "checked" : ""}>
+            <input type="checkbox" data-subj="${subj.id}" data-lesson="${l.id}" ${l.done ? "checked" : ""} ${archived ? "disabled" : ""}>
             <span class="title">${escapeHtml(l.title)}</span>
-            <button class="icon-btn" data-dellesson="${l.id}" data-dellessonsubj="${subj.id}" title="Remove lesson">✕</button>
+            ${archived ? "" : `<button class="icon-btn" data-dellesson="${l.id}" data-dellessonsubj="${subj.id}" title="Remove lesson">✕</button>`}
           </label>
         `).join("")}
       </div>
+      ${archived ? "" : `
       <div class="lesson-add">
         <input type="text" placeholder="Add a lesson / topic" data-addlesson="${subj.id}">
         <button class="btn btn-ghost btn-small" data-addlessonbtn="${subj.id}">Add</button>
-      </div>
-    `;
-    list.appendChild(card);
+      </div>`}
+    </div>
+  `;
+}
+
+let dragSrcId = null;
+let archivedExpanded = false;
+
+function setArchivedLabel(count){
+  const btn = document.getElementById("archivedToggleBtn");
+  btn.textContent = archivedExpanded ? "Hide archived" : `Archived (${count})`;
+}
+
+document.getElementById("archivedToggleBtn").addEventListener("click", () => {
+  archivedExpanded = !archivedExpanded;
+  document.getElementById("archivedList").classList.toggle("hidden", !archivedExpanded);
+  setArchivedLabel(state.subjects.filter(s => s.archived).length);
+});
+
+function renderSubjects(){
+  const list = document.getElementById("subjectsList");
+  const archivedWrap = document.getElementById("archivedList");
+  const archivedBtn = document.getElementById("archivedToggleBtn");
+  const active = state.subjects.filter(s => !s.archived);
+  const archived = state.subjects.filter(s => s.archived);
+
+  list.innerHTML = active.length === 0
+    ? '<div class="empty-state">No subjects yet — add your first one above.</div>'
+    : active.map(s => subjectCardHtml(s, false)).join("");
+
+  document.getElementById("archivedCount").textContent = archived.length;
+  archivedBtn.classList.toggle("hidden", archived.length === 0);
+  archivedWrap.innerHTML = archived.map(s => subjectCardHtml(s, true)).join("");
+
+  // drag-to-reorder (active list only)
+  list.querySelectorAll(".subject-card[draggable=true]").forEach(card => {
+    card.addEventListener("dragstart", () => { dragSrcId = card.dataset.cardid; card.classList.add("dragging"); });
+    card.addEventListener("dragend", () => { card.classList.remove("dragging"); });
+    card.addEventListener("dragover", (e) => e.preventDefault());
+    card.addEventListener("drop", (e) => {
+      e.preventDefault();
+      const targetId = card.dataset.cardid;
+      if (!dragSrcId || dragSrcId === targetId) return;
+      const ids = state.subjects.map(s => s.id);
+      const srcIdx = ids.indexOf(dragSrcId);
+      const [moved] = state.subjects.splice(srcIdx, 1);
+      const targetIdx = state.subjects.findIndex(s => s.id === targetId);
+      state.subjects.splice(targetIdx, 0, moved);
+      queueSave();
+      renderSubjects();
+      renderQueueHint();
+    });
   });
 
-  // toggle active
+  // color dot cycles through preset palette
+  [...list.querySelectorAll("[data-colorid]"), ...archivedWrap.querySelectorAll("[data-colorid]")].forEach(dot => {
+    dot.addEventListener("click", () => {
+      const s = state.subjects.find(s => s.id === dot.dataset.colorid);
+      const idx = SUBJECT_COLORS.indexOf(s.color);
+      s.color = SUBJECT_COLORS[(idx + 1) % SUBJECT_COLORS.length];
+      queueSave();
+      renderSubjects();
+    });
+  });
+
+  // toggle active (queue)
   list.querySelectorAll(".toggle").forEach(t => {
     t.addEventListener("click", () => {
       const s = state.subjects.find(s => s.id === t.dataset.id);
@@ -297,8 +406,29 @@ function renderSubjects(){
       renderQueueHint();
     });
   });
-  // delete subject
-  list.querySelectorAll("[data-del]").forEach(b => {
+  // archive subject
+  list.querySelectorAll("[data-archive]").forEach(b => {
+    b.addEventListener("click", () => {
+      const s = state.subjects.find(s => s.id === b.dataset.archive);
+      s.archived = true;
+      s.active = false;
+      queueSave();
+      renderSubjects();
+      renderQueueHint();
+    });
+  });
+  // restore subject
+  archivedWrap.querySelectorAll("[data-restore]").forEach(b => {
+    b.addEventListener("click", () => {
+      const s = state.subjects.find(s => s.id === b.dataset.restore);
+      s.archived = false;
+      queueSave();
+      renderSubjects();
+      renderQueueHint();
+    });
+  });
+  // permanently delete (archived only)
+  archivedWrap.querySelectorAll("[data-del]").forEach(b => {
     b.addEventListener("click", () => {
       state.subjects = state.subjects.filter(s => s.id !== b.dataset.del);
       queueSave();
@@ -421,7 +551,19 @@ function renderRing(){
   document.title = timerRunning ? `${m}:${s} · StudyFlow` : "StudyFlow — Grow your study habit";
 }
 
+function updateSoundBtn(){
+  const btn = document.getElementById("soundToggleBtn");
+  if (!btn) return;
+  btn.textContent = state.soundEnabled ? "🔊 Sound on" : "🔇 Sound off";
+}
+document.getElementById("soundToggleBtn").addEventListener("click", () => {
+  state.soundEnabled = !state.soundEnabled;
+  updateSoundBtn();
+  queueSave();
+});
+
 function beep(){
+  if (!state.soundEnabled) return;
   try {
     const freqMap = { study: 660, break: 440, prayer: 550, personal: 500 };
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -581,6 +723,78 @@ function renderStreak(){
   }
 }
 
+function renderAllTimeStats(){
+  const totalMinutes = Object.values(state.dailyLog).reduce((a,b) => a+b, 0);
+  const totalHoursEl = document.getElementById("statTotalHours");
+  if (totalHoursEl) totalHoursEl.textContent = (totalMinutes/60).toFixed(1) + "h";
+
+  const goal = state.dailyGoalMinutes;
+  let best = 0, run = 0;
+  if (goal) {
+    const days = Object.keys(state.dailyLog).sort();
+    let prevDate = null;
+    for (const ds of days) {
+      if ((state.dailyLog[ds] || 0) >= goal) {
+        if (prevDate) {
+          const diff = (new Date(ds) - new Date(prevDate)) / 86400000;
+          run = diff === 1 ? run + 1 : 1;
+        } else {
+          run = 1;
+        }
+        best = Math.max(best, run);
+        prevDate = ds;
+      } else {
+        run = 0;
+        prevDate = null;
+      }
+    }
+  }
+  best = Math.max(best, computeStreak());
+  const bestEl = document.getElementById("statBestStreak");
+  if (bestEl) bestEl.textContent = best;
+}
+
+let chartRange = "week"; // or "month"
+document.getElementById("chartRangeBtn").addEventListener("click", () => {
+  chartRange = chartRange === "week" ? "month" : "week";
+  document.getElementById("chartRangeBtn").textContent = chartRange === "week" ? "View month" : "View week";
+  document.getElementById("chartTitle").textContent = chartRange === "week" ? "This week" : "This month";
+  document.getElementById("weekChart").classList.toggle("hidden", chartRange !== "week");
+  document.getElementById("monthHeatmap").classList.toggle("hidden", chartRange !== "month");
+});
+
+function renderMonthHeatmap(){
+  const wrap = document.getElementById("monthHeatmap");
+  if (!wrap) return;
+  const goal = state.dailyGoalMinutes || 1;
+  const today = new Date();
+  const days = [];
+  for (let i = 29; i >= 0; i--) {
+    const dd = new Date(today);
+    dd.setUTCDate(today.getUTCDate() - i);
+    const ds = dateStr(dd);
+    const minutes = state.dailyLog[ds] || 0;
+    const ratio = minutes / goal;
+    let level = 0;
+    if (minutes > 0) level = ratio >= 1 ? 4 : ratio >= 0.66 ? 3 : ratio >= 0.33 ? 2 : 1;
+    days.push({ ds, minutes, level });
+  }
+  wrap.innerHTML = days.map(d => `<div class="heatmap-cell" data-level="${d.level}" title="${d.ds}: ${d.minutes} min"></div>`).join("");
+}
+
+document.getElementById("exportCsvBtn").addEventListener("click", () => {
+  const rows = [["Subject","Minutes","Date/Time"]];
+  state.sessions.forEach(s => rows.push([s.subject, s.minutes, s.at]));
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `studyflow-sessions-${todayStr()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
 function renderWeekChart(){
   const wrap = document.getElementById("weekChart");
   if (!wrap) return;
@@ -677,6 +891,9 @@ function renderAll(){
   renderQueueHint();
   renderStreak();
   renderWeekChart();
+  renderMonthHeatmap();
   renderSessions();
+  renderAllTimeStats();
   updateNotifyBtn();
+  updateSoundBtn();
 }
