@@ -42,6 +42,7 @@
     font-family:'Inter', sans-serif;
     min-height:100%;
     -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
   }
   h1,h2,h3,.brand{font-family:'Space Grotesk', sans-serif;}
   .mono{font-family:'JetBrains Mono', monospace;}
@@ -349,3 +350,43 @@
   .empty-state{color:var(--text-muted); font-size:13px; text-align:center; padding:30px 10px;}
 
   footer.appfoot{text-align:center; color:var(--text-muted); font-size:12px; margin-top:36px;}
+
+  /* ---------- phone tuning ---------- */
+  @media (max-width:600px){
+    #landing{padding:20px;}
+    .landing-inner{max-width:100%;}
+    #landing h1{font-size:clamp(26px, 8vw, 34px); margin-bottom:14px;}
+    #landing p.tagline{font-size:14.5px; margin-bottom:28px;}
+    .brand{font-size:19px; margin-bottom:22px;}
+    .brand-mark-lg{height:26px;}
+    #themeToggleLanding{top:14px; right:14px; width:32px; height:32px;}
+    .google-btn{width:100%; padding:12px 18px; font-size:14px;}
+    #landing .fine{margin-top:14px;}
+
+    #app{padding:16px 14px 48px;}
+    header.topbar{flex-wrap:wrap; row-gap:10px;}
+    header.topbar .brand{font-size:18px;}
+    header.topbar .brand-mark{height:20px;}
+    header.topbar .who{flex-wrap:wrap; justify-content:flex-end; row-gap:8px;}
+    header.topbar .greet{max-width:96px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+
+    .goal-wrap{padding:14px 16px; margin-bottom:16px;}
+    .goal-top{flex-wrap:wrap; row-gap:6px;}
+    .goal-top .val{margin-left:0;}
+    .alltime-row{flex-wrap:wrap; row-gap:8px; gap:8px 20px;}
+
+    .grid, .grid-secondary{gap:16px;}
+    .panel{padding:16px;}
+
+    .ring-wrap{width:180px; height:180px; margin-bottom:16px;}
+    .ring-time{font-size:32px;}
+    .timer-controls{flex-wrap:wrap; justify-content:center; row-gap:8px;}
+    .break-actions{flex-wrap:wrap; justify-content:center; row-gap:8px;}
+    .settings-row{gap:8px; row-gap:12px;}
+    .field{flex:1 1 calc(50% - 8px); min-width:0;}
+
+    .subject-head .meta{font-size:10.5px;}
+    .session-time{width:50px; font-size:11px;}
+
+    .heatmap{gap:4px;}
+  }
