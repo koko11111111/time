@@ -513,7 +513,7 @@ const RADIUS = 96;
 const CIRC = 2 * Math.PI * RADIUS;
 document.getElementById("ringFg").style.strokeDasharray = CIRC;
 
-let timer = { phase: "study", secondsLeft: 25*60, queueIndex: 0 };
+let timer = { phase: "study", secondsLeft: 25*60, queueIndex: 0, endTime: null };
 let timerRunning = false;
 let intervalId = null;
 
@@ -545,6 +545,7 @@ function renderRingSubject(){
 
 function resetPhase(){
   timer.secondsLeft = phaseMinutes(timer.phase) * 60;
+  timer.endTime = Date.now() + timer.secondsLeft * 1000;
   renderRing();
 }
 
@@ -607,10 +608,12 @@ function beep(){
 }
 
 function tick(){
-  timer.secondsLeft--;
-  if (timer.secondsLeft <= 0) {
+  const remaining = Math.round((timer.endTime - Date.now()) / 1000);
+  if (remaining <= 0) {
+    timer.secondsLeft = 0;
     completePhase();
   } else {
+    timer.secondsLeft = remaining;
     renderRing();
   }
 }
@@ -628,6 +631,7 @@ function completePhase(){
     if (returnTo) {
       timer.phase = returnTo.phase;
       timer.secondsLeft = returnTo.secondsLeft;
+      timer.endTime = Date.now() + timer.secondsLeft * 1000;
       if (returnTo.wasRunning) {
         renderRing();
       } else {
@@ -664,6 +668,7 @@ function completePhase(){
 function actuallyStart(){
   timerRunning = true;
   document.getElementById("startPauseBtn").textContent = "Pause";
+  timer.endTime = Date.now() + timer.secondsLeft * 1000;
   intervalId = setInterval(tick, 1000);
 }
 function startTimer(){
@@ -674,6 +679,10 @@ function stopTimer(){
   timerRunning = false;
   document.getElementById("startPauseBtn").textContent = "Start";
   clearInterval(intervalId);
+  // Freeze secondsLeft at the real elapsed time, not whatever the last throttled tick left it at.
+  if (timer.endTime) {
+    timer.secondsLeft = Math.max(0, Math.round((timer.endTime - Date.now()) / 1000));
+  }
   renderRing();
 }
 function startSpecialBreak(phase){
@@ -681,9 +690,18 @@ function startSpecialBreak(phase){
   specialReturnState = { phase: timer.phase, secondsLeft: timer.secondsLeft, wasRunning: timerRunning };
   timer.phase = phase;
   timer.secondsLeft = phaseMinutes(phase) * 60;
+  timer.endTime = Date.now() + timer.secondsLeft * 1000;
   if (!timerRunning) actuallyStart();
   renderRing();
 }
+
+// Background tabs throttle setInterval, so the ring can lag until the next tick fires.
+// Resync immediately the moment the tab becomes visible again.
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && timerRunning) {
+    tick();
+  }
+});
 
 document.getElementById("startPauseBtn").addEventListener("click", () => {
   timerRunning ? stopTimer() : startTimer();
